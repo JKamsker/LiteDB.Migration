@@ -26,54 +26,53 @@ For a full example, see the [Tests](https://github.com/JKamsker/LiteDb.Migration
 1. **Define Your Models**: Start by defining your document models. For each version change that requires a migration, prepare a new version of the model.
 
 ```csharp
-// Original model
-public class ModelV1
+// Initial model
+public class EntryModel
 {
     public int Id { get; set; }
     public string OldProperty { get; set; }
 }
 
-// Updated model
-public class ModelV2
+// The latest version of the model, which is actively used in your app
+public class CurrentModel
 {
     public int Id { get; set; }
-    public string NewProperty { get; set; }
-}
-
-// Current model (Should always be ModelV[n])
-public class Model
-{
-    public int Id { get; set; }
-    public string NewProperty { get; set; }
+    public string NewestProperty { get; set; }
 }
 ```
 
 2. **Seed Data**: Seed your database with the original model.
 
 ```csharp
+ // seed db
 using (var db = new LiteDatabase("YourDatabase.db"))
 {
-    var collection = db.GetCollection<ModelV1>("YourCollectionName");
-    collection.Insert(new ModelV1 { Id = 1, OldProperty = "Old" });
+    var col = db.GetCollection<EntryModel>("ModelX");
+    col.Insert(new EntryModel { Id = 1, OldProperty = "OldValue" });
 }
 ```
 
-3. **Define and apply Migrations**: Define your migrations using the `MigrationContainer` class and apply them using the `MigrationContainer` class.
+3. **Define and apply Migrations**: Define your migrations using the `MigrationContainer` class and apply them using the `MigrationContainer` class.<br/>
+Whenever you want to change the model, you can define a new migration using the `WithInlineMigration` method. 
 
 ```csharp
  // apply migration
 using (var db = new LiteDatabase("YourDatabase.db"))
 {
-    var container = new MigrationContainer(config =>
+    var container = new MigrationContainer(migConfig =>
     {
-        config.Collection<Model>("modelA", x => x
-            .WithMigrationStart<ModelV1>()
-            .WithInlineMigration(model => new ModelV2
+        migConfig.Collection<CurrentModel>("ModelX", config => config
+            .WithMigrationStart<EntryModel>()
+            .WithInlineMigration(x => new
             {
-                Id = model.Id,
-                NewProperty = $"New-{model.OldProperty}"
+                x.Id,
+                NewProperty = "New-" + x.OldProperty
             })
-            // You can add more migrations here
+            .WithInlineMigration(x => new
+            {
+                x.Id,
+                NewestProperty = "New-" + x.NewProperty
+            })
         );
     });
 
@@ -81,14 +80,24 @@ using (var db = new LiteDatabase("YourDatabase.db"))
 }
 ```
 
-4. **Query Data**: Query your database using the new model.
+1. **Query Data**: Query your database using the new model.
 
 ```csharp
+// verify migration
 using (var db = new LiteDatabase("YourDatabase.db"))
 {
-    var collection = db.GetCollection<Model>("modelA");
-    var result = collection.FindAll().First();
-    Console.WriteLine(result.NewProperty); // Output: New-Old
+    var col = db.GetCollection<CurrentModel>("ModelX");
+    var model = col.FindById(1);
+
+    Console.WriteLine($"Id: {model.Id}, NewestProperty: {model.NewestProperty}");
+    if (model.Id != 1 || model.NewestProperty != "New-New-OldValue")
+    {
+        throw new Exception("Migration failed");
+    }
+    else
+    {
+        Console.WriteLine("Migration succeeded");
+    }
 }
 ```
 ## Advanced Usage

@@ -71,9 +71,5 @@ public class InlineTestSimple_Minimal
     {
         public int Id { get; set; }
         public string NewestProperty { get; set; }
-
-        // Extra properties
-
-        public Dictionary<string, object> Extra { get; set; }
     }
 }
