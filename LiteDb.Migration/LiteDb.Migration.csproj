@@ -1,0 +1,59 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!--<TargetFramework>net6.0</TargetFramework>-->
+	
+		<TargetFrameworks>net6.0;net5.0;netstandard1.3</TargetFrameworks>
+		<!--<TargetFrameworks>net6.0;net5.0;netstandard1.3</TargetFrameworks>-->
+
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		
+		<!-- Ignore warnings -->
+		<NoWarn>NU1904</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<Version>0.0.9</Version>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Title>Litedb Migration Lib</Title>
+		<Authors>Jonas Kamsker</Authors>
+		<Company>Jonas Kamsker</Company>
+		<Description>A library which provides the ability to migrate models in LiteDB</Description>
+		<Copyright>Jonas Kamsker</Copyright>
+		<PackageProjectUrl>https://github.com/JKamsker/LiteDB.Migration</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/JKamsker/LiteDB.Migration</RepositoryUrl>
+		<PackageTags>litedb, migration</PackageTags>
+		<PackageReadmeFile>Readme.md</PackageReadmeFile>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Include="..\Readme.md" Condition="Exists('..\Readme.md')">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	</ItemGroup>
+	
+	
+	<!--
+		Develop under net6.0, Release under netstandard1.3
+	-->
+	<!--<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		--><!-- <TargetFramework>netstandard1.3</TargetFramework> --><!--
+		<TargetFrameworks>netstandard1.3;net5.0</TargetFrameworks>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<TargetFramework>net6.0</TargetFramework>
+	</PropertyGroup>-->
+
+
+	<ItemGroup>
+		<PackageReference Include="LiteDB" Version="5.0.7" />
+		<!--<PackageReference Include="Microsoft.CSharp"  />-->
+		<!--<PackageReference Include="Microsoft.CSharp" Version="4.4.0" />-->
+	</ItemGroup>
+</Project>
