@@ -23,7 +23,8 @@ public class MigrationConfig
         return this;
     }
 
-    public MigrationConfig Collection<T>(string collectionName, Action<CollectionConfig>? configure = null)
+    public MigrationConfig Collection<T>(string collectionName, Action<CollectionConfig<T>>? configure = null)
+        where T : class
     {
         var typeName = typeof(T).Name;
         var sets = _migrationSets.Where(x => string.Equals(x.Name, typeName, StringComparison.OrdinalIgnoreCase)).Select(x => x.Migration);
@@ -31,7 +32,7 @@ public class MigrationConfig
         var collectionConfig = GetOrCreateConfig(collectionName);
         collectionConfig.WithMigrations(sets, true);
 
-        configure?.Invoke(collectionConfig);
+        configure?.Invoke(new CollectionConfig<T>(collectionConfig));
         return this;
     }
 

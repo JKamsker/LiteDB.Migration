@@ -72,4 +72,53 @@ public class InlineTestSimple_Minimal
         public int Id { get; set; }
         public string NewestProperty { get; set; }
     }
+
+    [Fact]
+    public void Test_InlineMigrations_Simple_Minimal_With_Type_Checking()
+    {
+        var opener = DbOpener.Memory();
+
+        // seed db
+        using (var db = opener.Open())
+        {
+            var col = db.GetCollection<ModelV1>("ModelX");
+            col.Insert(new ModelV1 { Id = 1, OldProperty = "OldValue" });
+        }
+
+        // apply migration
+        using (var db = opener.Open())
+        {
+            var container = new MigrationContainer(migConfig =>
+            {
+                migConfig.Collection<CurrentModel>("ModelX", config => config
+                    .WithMigrationStart<ModelV1>(conf => conf
+                        .WithInlineMigration(x => new
+                        {
+                            x.Id,
+                            NewProperty = "New-" + x.OldProperty
+                        })
+                        .WithInlineMigration(x => new CurrentModel
+                        {
+                            Id = x.Id,
+                            NewestProperty = "New-" + x.NewProperty
+                        })
+                    )
+                );
+            });
+
+            container.Apply(db);
+        }
+
+        // verify migration
+        using (var db = opener.Open())
+        {
+            var col = db.GetCollection<CurrentModel>("ModelX");
+            var model = col.FindById(1);
+            var all = col.FindAll().ToList();
+
+            Assert.NotNull(model);
+            Assert.Equal(1, model.Id);
+            Assert.Equal("New-New-OldValue", model.NewestProperty);
+        }
+    }
 }

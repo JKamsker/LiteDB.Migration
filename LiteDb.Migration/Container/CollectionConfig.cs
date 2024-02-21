@@ -1,21 +1,74 @@
 ﻿namespace LiteDB.Migration.Container;
 
-public class CollectionConfig
+internal class CollectionConfigData
 {
-    public List<MigrationBase> Migrations { get; } = new();
+    public List<MigrationBase> Migrations { get; private protected set; }
+
+    public int? ImplicitLatestVersion { get; set; }
+
+    public int? ExplicitLatestVersion { get; set; }
 
     public int? LatestVersion
     {
-        get => _latestVersion ?? _implicitLatestVersion;
-        private set => _latestVersion = value;
+        get => ExplicitLatestVersion ?? ImplicitLatestVersion;
     }
 
-    private int? _implicitLatestVersion;
-    private int? _latestVersion;
+    public CollectionConfigData()
+    {
+        Migrations = new();
+    }
+}
+
+public class CollectionConfig<TCurrent> : CollectionConfig
+    where TCurrent : class
+{
+    public CollectionConfig(CollectionConfig config)
+        : base(config)
+    {
+    }
+
+    /// <summary>
+    /// Starts a new migration for the source model.
+    /// </summary>
+    public CollectionConfig WithMigrationStart<TSourceModel>(Func<InlineCollectionConfigStarter<TSourceModel>, ITargeModel<TCurrent>> conf)
+        where TSourceModel : class
+    {
+        var starter = new InlineCollectionConfigStarter<TSourceModel>(this);
+        var target = conf(starter);
+
+        return this;
+    }
+}
+
+public class CollectionConfig
+{
+    public List<MigrationBase> Migrations => _data.Migrations;
+    public int? LatestVersion => _data.LatestVersion;
+
+    //public int? LatestVersion
+    //{
+    //    get => _latestVersion ?? _implicitLatestVersion;
+    //    private set => _latestVersion = value;
+    //}
+
+    //protected int? _implicitLatestVersion;
+    //protected int? _latestVersion;
+
+    private CollectionConfigData _data;
+
+    public CollectionConfig()
+    {
+        _data = new();
+    }
+
+    public CollectionConfig(CollectionConfig config)
+    {
+        _data = config._data;
+    }
 
     public CollectionConfig WithLatestVersion(int version)
     {
-        _latestVersion = version;
+        _data.ExplicitLatestVersion = version;
         return this;
     }
 
@@ -29,7 +82,8 @@ public class CollectionConfig
             }
 
             Migrations.Add(migration);
-            _implicitLatestVersion = migration.To;
+            //_implicitLatestVersion = migration.To;
+            _data.ImplicitLatestVersion = migration.To;
         }
 
         return this;
@@ -41,8 +95,8 @@ public class CollectionConfig
         var migration = new T();
         Migrations.Add(migration);
 
-        _implicitLatestVersion = migration.To;
-
+        //_implicitLatestVersion = migration.To;
+        _data.ImplicitLatestVersion = migration.To;
         return this;
     }
 
@@ -61,7 +115,8 @@ public class CollectionConfig
         configure?.Invoke(migrationBase);
         Migrations.Add(migrationBase);
 
-        _implicitLatestVersion = to;
+        //_implicitLatestVersion = to;
+        _data.ImplicitLatestVersion = to;
 
         return new InlineCollectionConfig<TSourceModel, TTargetModel>(this, migrationBase);
     }
@@ -81,7 +136,8 @@ public class CollectionConfig
         configure?.Invoke(migrationBase);
         Migrations.Add(migrationBase);
 
-        _implicitLatestVersion = to;
+        //_implicitLatestVersion = to;
+        _data.ImplicitLatestVersion = to;
 
         return new InlineCollectionConfig<TSourceModel, TTargetModel>(this, migrationBase);
     }
@@ -104,14 +160,12 @@ public class CollectionConfig
         return registry;
     }
 
-
     public InlineCollectionConfigStarter<TSourceModel> WithMigrationStart<TSourceModel>()
         where TSourceModel : class
     {
         return new InlineCollectionConfigStarter<TSourceModel>(this);
     }
 }
-
 
 public class InlineCollectionConfigStarter<TSourceModel>
     where TSourceModel : class
@@ -136,9 +190,18 @@ public class InlineCollectionConfigStarter<TSourceModel>
     }
 }
 
+public interface IStartModel<TSourceModel>
+    where TSourceModel : class
+{
+}
 
+public interface ITargeModel<TTargetModel>
+    where TTargetModel : class
+{
+}
 
 public class InlineCollectionConfig<TSourceModel, TTargetModel>
+    : IStartModel<TSourceModel>, ITargeModel<TTargetModel>
     where TSourceModel : class
     where TTargetModel : class
 {
@@ -183,8 +246,6 @@ public class InlineCollectionConfig<TSourceModel, TTargetModel>
 
         return _config.WithInlineMigration(from, to, migration);
     }
-
-
 
     /// <summary>
     /// Creates an inline migration from the source model to the target model.
