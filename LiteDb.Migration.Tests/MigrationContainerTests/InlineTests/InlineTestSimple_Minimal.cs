@@ -30,13 +30,13 @@ public class InlineTestSimple_Minimal
                 //config.Collection<ModelY>("ModelX", x => x.WithMigration<ModelX_to_ModelY_Mapper>());
 
                 migConfig.Collection<CurrentModel>("ModelX", config => config
-                    .WithMigrationStart<ModelV1>()
-                    .WithInlineMigration(x => new
+                    .StartWithModel<ModelV1>()
+                    .WithMigration(x => new
                     {
                         x.Id,
                         NewProperty = "New-" + x.OldProperty
                     })
-                    .WithInlineMigration(x => new
+                    .WithMigration(x => new
                     {
                         x.Id,
                         NewestProperty = "New-" + x.NewProperty
@@ -91,13 +91,13 @@ public class InlineTestSimple_Minimal
             var container = new MigrationContainer(migConfig =>
             {
                 migConfig.Collection<CurrentModel>("ModelX", config => config
-                    .WithMigrationStart<ModelV1>(conf => conf
-                        .WithInlineMigration(x => new
+                    .StartWithModel<ModelV1>(conf => conf
+                        .WithMigration(x => new
                         {
                             x.Id,
                             NewProperty = "New-" + x.OldProperty
                         })
-                        .WithInlineMigration(x => new CurrentModel
+                        .WithMigration(x => new CurrentModel
                         {
                             Id = x.Id,
                             NewestProperty = "New-" + x.NewProperty
@@ -113,6 +113,7 @@ public class InlineTestSimple_Minimal
         using (var db = opener.Open())
         {
             var col = db.GetCollection<CurrentModel>("ModelX");
+
             var model = col.FindById(1);
             var all = col.FindAll().ToList();
 

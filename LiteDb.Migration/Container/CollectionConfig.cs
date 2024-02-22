@@ -30,7 +30,7 @@ public class CollectionConfig<TCurrent> : CollectionConfig
     /// <summary>
     /// Starts a new migration for the source model.
     /// </summary>
-    public CollectionConfig WithMigrationStart<TSourceModel>(Func<InlineCollectionConfigStarter<TSourceModel>, ITargeModel<TCurrent>> conf)
+    public CollectionConfig StartWithModel<TSourceModel>(Func<InlineCollectionConfigStarter<TSourceModel>, ITargeModel<TCurrent>> conf)
         where TSourceModel : class
     {
         var starter = new InlineCollectionConfigStarter<TSourceModel>(this);
@@ -101,7 +101,7 @@ public class CollectionConfig
     }
 
     //public CollectionConfig WithInlineMigration<TSourceModel, TTargetModel>
-    public InlineCollectionConfig<TSourceModel, TTargetModel> WithInlineMigration<TSourceModel, TTargetModel>
+    public InlineCollectionConfig<TSourceModel, TTargetModel> WithMigration<TSourceModel, TTargetModel>
     (
         int? from,
         int to,
@@ -121,7 +121,7 @@ public class CollectionConfig
         return new InlineCollectionConfig<TSourceModel, TTargetModel>(this, migrationBase);
     }
 
-    public InlineCollectionConfig<TSourceModel, TTargetModel> WithInlineMigration<TSourceModel, TTargetModel>
+    public InlineCollectionConfig<TSourceModel, TTargetModel> WithMigration<TSourceModel, TTargetModel>
     (
         Func<TSourceModel, TTargetModel> mapper,
         Action<FuncMigration<TSourceModel, TTargetModel>>? configure = null
@@ -160,7 +160,7 @@ public class CollectionConfig
         return registry;
     }
 
-    public InlineCollectionConfigStarter<TSourceModel> WithMigrationStart<TSourceModel>()
+    public InlineCollectionConfigStarter<TSourceModel> StartWithModel<TSourceModel>()
         where TSourceModel : class
     {
         return new InlineCollectionConfigStarter<TSourceModel>(this);
@@ -177,16 +177,16 @@ public class InlineCollectionConfigStarter<TSourceModel>
         _config = config;
     }
 
-    public InlineCollectionConfig<TSourceModel, TTargetModel> WithInlineMigration<TTargetModel>(int? from, int to, Func<TSourceModel, TTargetModel> migration)
+    public InlineCollectionConfig<TSourceModel, TTargetModel> WithMigration<TTargetModel>(int? from, int to, Func<TSourceModel, TTargetModel> migration)
         where TTargetModel : class
     {
-        return _config.WithInlineMigration(from, to, migration);
+        return _config.WithMigration(from, to, migration);
     }
 
-    public InlineCollectionConfig<TSourceModel, TTargetModel> WithInlineMigration<TTargetModel>(Func<TSourceModel, TTargetModel> migration)
+    public InlineCollectionConfig<TSourceModel, TTargetModel> WithMigration<TTargetModel>(Func<TSourceModel, TTargetModel> migration)
         where TTargetModel : class
     {
-        return _config.WithInlineMigration(migration);
+        return _config.WithMigration(migration);
     }
 }
 
@@ -231,20 +231,20 @@ public class InlineCollectionConfig<TSourceModel, TTargetModel>
         return _config.WithMigration<T>();
     }
 
-    public InlineCollectionConfig<TSrc, TTarget> WithInlineMigration<TSrc, TTarget>(int? from, int to, Func<TSrc, TTarget> migration, Action<FuncMigration<TSrc, TTarget>>? configure = null)
+    public InlineCollectionConfig<TSrc, TTarget> WithMigration<TSrc, TTarget>(int? from, int to, Func<TSrc, TTarget> migration, Action<FuncMigration<TSrc, TTarget>>? configure = null)
         where TSrc : class
         where TTarget : class
     {
-        return _config.WithInlineMigration(from, to, migration, configure);
+        return _config.WithMigration(from, to, migration, configure);
     }
 
-    public InlineCollectionConfig<TTargetModel, TNewTarget> WithInlineMigration<TNewTarget>(Func<TTargetModel, TNewTarget> migration)
+    public InlineCollectionConfig<TTargetModel, TNewTarget> WithMigration<TNewTarget>(Func<TTargetModel, TNewTarget> migration)
         where TNewTarget : class
     {
         var from = _migration.To;
         var to = _migration.To + 1;
 
-        return _config.WithInlineMigration(from, to, migration);
+        return _config.WithMigration(from, to, migration);
     }
 
     /// <summary>
@@ -255,14 +255,14 @@ public class InlineCollectionConfig<TSourceModel, TTargetModel>
     /// <typeparam name="TTarget"></typeparam>
     /// <param name="migration"></param>
     /// <returns></returns>
-    public InlineCollectionConfig<TSrc, TTarget> WithInlineMigration<TSrc, TTarget>(Func<TSrc, TTarget> migration)
+    public InlineCollectionConfig<TSrc, TTarget> WithMigration<TSrc, TTarget>(Func<TSrc, TTarget> migration)
         where TSrc : class
         where TTarget : class
     {
         var from = _migration.To;
         var to = _migration.To + 1;
 
-        return _config.WithInlineMigration(from, to, migration);
+        return _config.WithMigration(from, to, migration);
     }
 
     /// <summary>

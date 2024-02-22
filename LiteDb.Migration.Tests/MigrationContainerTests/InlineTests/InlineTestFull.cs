@@ -24,8 +24,8 @@ public class InlineTestFull
             var container = new MigrationContainer(config =>
             {
                 config.Collection<ModelA>("modelA", x => x
-                    .WithMigrationStart<ModelA_1_0_0>()
-                    .WithInlineMigration(model => new
+                    .StartWithModel<ModelA_1_0_0>()
+                    .WithMigration(model => new
                     {
                         model.Id,
                         model.Name,
@@ -38,7 +38,7 @@ public class InlineTestFull
                             model.PostalCode
                         }
                     })
-                    .WithInlineMigration(document => new
+                    .WithMigration(document => new
                     {
                         document.Id,
                         document.Address,

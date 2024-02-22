@@ -30,12 +30,12 @@ public class InlineTestSimple
                 //config.Collection<ModelY>("ModelX", x => x.WithMigration<ModelX_to_ModelY_Mapper>());
 
                 config.Collection<ModelV2>("ModelX", x => x
-                    .WithInlineMigration<ModelV1, ModelV2>(1, 2, x => new ModelV2
+                    .WithMigration<ModelV1, ModelV2>(1, 2, x => new ModelV2
                     {
                         Id = x.Id,
                         NewProperty = "New-" + x.OldProperty
                     }, x => x.WithBsonMapper(BsonMapper.Global))
-                    .WithInlineMigration<ModelV2, ModelV3>(2, 3, x => new ModelV3
+                    .WithMigration<ModelV2, ModelV3>(2, 3, x => new ModelV3
                     {
                         Id = x.Id,
                         NewestProperty = "New-" + x.NewProperty
@@ -58,7 +58,6 @@ public class InlineTestSimple
         }
     }
 
-  
     // Initial model
     public class ModelV1
     {
