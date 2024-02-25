@@ -7,22 +7,17 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build-and-test:
+  build-test-pack-release:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        dotnet-version: [ '5.0.x', '6.0.x' ]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: ${{ matrix.dotnet-version }}
+          dotnet-version: '6.0.x'
 
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v0.9.11
@@ -42,36 +37,20 @@ jobs:
       - name: Run tests
         run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test_results.xml"
 
-      - name: Set tag_name Output
-        id: set_tag_name
-        run: echo "tag_name=${{ steps.gitversion.outputs.SemVer }}" >> $GITHUB_OUTPUT
-
-  pack-and-release:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '6.0.x'
-
-      - name: Dotnet pack
-        run: dotnet pack --no-build --configuration Release /p:PackageVersion=${{ needs.build-and-test.outputs.tag_name }} --output ./nupkgs
+      - name: Create NuGet package
+        run: dotnet pack --no-build --configuration Release /p:PackageVersion=${{ steps.gitversion.outputs.SemVer }} --output ./nupkgs
 
       - name: Push NuGet package
         run: |
-         dotnet nuget add source --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.actor }}/index.json"
-         dotnet nuget push -k ${{ secrets.GITHUB_TOKEN }} -s github ./nupkgs/*.nupkg
+          dotnet nuget add source --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.actor }}/index.json"
+          dotnet nuget push -k ${{ secrets.GITHUB_TOKEN }} -s github ./nupkgs/*.nupkg
 
       - name: Create release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ needs.build-and-test.outputs.tag_name }}
-          release_name: Release ${{ needs.build-and-test.outputs.tag_name }}
+          tag_name: ${{ steps.gitversion.outputs.SemVer }}
+          release_name: Release ${{ steps.gitversion.outputs.SemVer }}
           draft: false
           prerelease: false
