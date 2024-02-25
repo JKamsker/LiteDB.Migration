@@ -1,0 +1,90 @@
+name: .NET
+
+on:
+  push:
+    branches: [ "master", "workflows" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build-and-pack:
+    runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.set_tag_name.outputs.tag_name }}
+    strategy:
+      matrix:
+        dotnet-version: [ '5.0.x', '6.0.x' ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0.9.11
+        with:
+          versionSpec: '5.x'
+
+      - name: Calculate version with GitVersion
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0.9.11
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build project
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run tests
+        run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test_results.xml"
+
+      - name: Pack
+        run: dotnet pack --no-build --configuration Release /p:PackageVersion=${{ steps.gitversion.outputs.SemVer }} --output ./nupkgs/${{ matrix.dotnet-version }}
+
+      - name: Upload NuGet package artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.dotnet-version }}
+          path: ./nupkgs/${{ matrix.dotnet-version }}/*.nupkg
+
+      - name: Set tag_name Output
+        id: set_tag_name
+        run: echo "tag_name=${{ steps.gitversion.outputs.SemVer }}" >> $GITHUB_OUTPUT
+
+  create-and-upload-release:
+    needs: build-and-pack
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: ./nupkgs
+
+      - name: Create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.build-and-pack.outputs.tag_name }}
+          release_name: Release ${{ needs.build-and-pack.outputs.tag_name }}
+          draft: false
+          prerelease: false
+
+      - name: Upload NuGet packages to release
+        run: |
+          for file in ./nupkgs/*/*.nupkg; do
+            cp "$file" "./nupkgs/"
+            
+            echo "Uploading $(basename "$file") to release..."
+            gh release upload ${{ needs.build-and-pack.outputs.tag_name }} "$file" --repo ${{ github.repository }}
+            
+            break # ugly 
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
