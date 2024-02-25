@@ -6,18 +6,26 @@ on:
   pull_request:
     branches: [ "master" ]
 
+env:
+  DOTNET_VERSION: '6.0.x'
+
 jobs:
-  build-test-pack-release:
+  build:
     runs-on: ubuntu-latest
+
+    outputs:
+      semVer: ${{ steps.gitversion.outputs.SemVer }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v0.9.11
@@ -28,29 +36,90 @@ jobs:
         id: gitversion
         uses: gittools/actions/gitversion/execute@v0.9.11
 
+      - name: Cache NuGet packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
       - name: Restore dependencies
         run: dotnet restore
 
       - name: Build project
         run: dotnet build --no-restore --configuration Release
 
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            **/bin
+            **/obj
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
       - name: Run tests
         run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test_results.xml"
 
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: "**/TestResults"
+
+  nuget:
+    if: github.event_name == 'push'
+    needs: [build, test]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
       - name: Create NuGet package
-        run: dotnet pack --no-build --configuration Release /p:PackageVersion=${{ steps.gitversion.outputs.SemVer }} --output ./nupkgs
+        run: dotnet pack --no-build --configuration Release /p:PackageVersion=${{ needs.build.outputs.semVer }} --output ./nupkgs
 
       - name: Push NuGet package
         run: |
           dotnet nuget add source --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.actor }}/index.json"
-          dotnet nuget push -k ${{ secrets.GITHUB_TOKEN }} -s github ./nupkgs/*.nupkg
+          dotnet nuget push --skip-duplicate -k ${{ secrets.GITHUB_TOKEN }} -s github ./nupkgs/*.nupkg
 
+  release:
+    if: github.event_name == 'push'
+    needs: [build, test, nuget]
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Create release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.gitversion.outputs.SemVer }}
-          release_name: Release ${{ steps.gitversion.outputs.SemVer }}
+          tag_name: ${{ needs.build.outputs.semVer }}
+          release_name: Release ${{ needs.build.outputs.semVer }}
           draft: false
           prerelease: false
