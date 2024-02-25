@@ -76,15 +76,10 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload NuGet packages to release
+      - name: Add NuGet Source
+        run: dotnet nuget add source --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.actor }}/index.json"
+
+      - name: Push NuGet packages to GitHub Packages
         run: |
-          for file in ./nupkgs/*/*.nupkg; do
-            cp "$file" "./nupkgs/"
-            
-            echo "Uploading $(basename "$file") to release..."
-            gh release upload ${{ needs.build-and-pack.outputs.tag_name }} "$file" --repo ${{ github.repository }}
-            
-            break # ugly 
-          done
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          newestSubDir=$(ls -td -- ${GITHUB_WORKSPACE}/nupkgs/*/ | head -n 1)
+          dotnet nuget push -k ${{ secrets.GITHUB_TOKEN }} -s github $(ls ${newestSubDir}*.nupkg | head -n 1)
