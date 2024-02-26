@@ -106,6 +106,7 @@ jobs:
       - name: Push NuGet package
         run: |
           dotnet nuget push -k ${{ secrets.GITHUB_TOKEN }} -s "https://nuget.pkg.github.com/${{ github.actor }}/index.json" ./nupkgs/*.nupkg
+          dotnet nuget push -k ${{ secrets.GITHUB_TOKEN }} -s "https://nuget.pkg.github.com/${{ github.actor }}/index.json" ./nupkgs/*.snupkg
 
   release:
     if: github.event_name == 'push'
