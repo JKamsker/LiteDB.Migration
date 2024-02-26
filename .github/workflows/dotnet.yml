@@ -105,8 +105,7 @@ jobs:
 
       - name: Push NuGet package
         run: |
-          dotnet nuget add source --username ${{ github.actor }} --api-key ${{ secrets.GITHUB_TOKEN }} --name github "https://nuget.pkg.github.com/${{ github.actor }}/index.json"
-          dotnet nuget push --skip-duplicate -k ${{ secrets.GITHUB_TOKEN }} -s github ./nupkgs/*.nupkg
+          dotnet nuget push -k ${{ secrets.GITHUB_TOKEN }} -s "https://nuget.pkg.github.com/${{ github.actor }}/index.json" ./nupkgs/*.nupkg
 
   release:
     if: github.event_name == 'push'
