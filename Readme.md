@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/github/license/JKamsker/LiteDB.Migration.svg)](https://github.com/JKamsker/LiteDB.Migration/blob/master/LICENSE)
 
 
-LiteDB.Migration is a library for migrating schema changes in LiteDB databases. 
+LiteDB.Migration is a library for migrating schema changes in [LiteDB](https://github.com/mbdavid/litedb) databases. 
 
 ## Features
 
