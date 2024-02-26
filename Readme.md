@@ -1,6 +1,12 @@
 # LiteDB.Migration
+    
+[![NuGet](https://img.shields.io/nuget/v/LiteDB.Migration.svg)](https://www.nuget.org/packages/LiteDB.Migration/)
+[![NuGet](https://img.shields.io/nuget/dt/LiteDB.Migration.svg)](https://www.nuget.org/packages/LiteDB.Migration/)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/JKamsker/LiteDB.Migration/dotnet.yml)](https://github.com/JKamsker/LiteDB.Migration/actions/workflows/dotnet.yml)
+[![License](https://img.shields.io/github/license/JKamsker/LiteDB.Migration.svg)](https://github.com/JKamsker/LiteDB.Migration/blob/master/LICENSE)
 
-LiteDB.Migration is a lightweight, easy-to-use library designed to facilitate schema migrations for LiteDB databases in .NET applications. It provides a structured way to evolve your database schema over time, ensuring that your application can safely and efficiently migrate data as your models change.
+
+LiteDB.Migration is a library for migrating schema changes in LiteDB databases. 
 
 ## Features
 
