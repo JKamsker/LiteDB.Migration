@@ -15,7 +15,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>0.0.9</Version>
+		<Version>0.0.10</Version>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Title>Litedb Migration Lib</Title>
@@ -28,6 +28,7 @@
 		<PackageTags>litedb, migration</PackageTags>
 		<PackageReadmeFile>Readme.md</PackageReadmeFile>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<IncludeSymbols>True</IncludeSymbols>
 	</PropertyGroup>
 
 	<ItemGroup>

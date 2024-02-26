@@ -12,7 +12,7 @@ LiteDB.Migration is a lightweight, easy-to-use library designed to facilitate sc
 
 ### Installation
 
-LiteDB.Migration is available as a NuGet package. You can install it via the NuGet Package Manager or the CLI:
+LiteDB.Migration is available as a [NuGet](https://www.nuget.org/packages/LiteDB.Migration/) package. You can install it via the NuGet Package Manager or the CLI:
 
 ```bash
 dotnet add package LiteDB.Migration
@@ -53,7 +53,7 @@ using (var db = new LiteDatabase("YourDatabase.db"))
 ```
 
 3. **Define and apply Migrations**: Define your migrations using the `MigrationContainer` class and apply them using the `MigrationContainer` class.<br/>
-Whenever you want to change the model, you can define a new migration using the `WithInlineMigration` method. 
+Whenever you want to change the model, you can define a new migration using the `WithMigration` method. 
 
 ```csharp
  // apply migration
@@ -62,13 +62,13 @@ using (var db = new LiteDatabase("YourDatabase.db"))
     var container = new MigrationContainer(migConfig =>
     {
         migConfig.Collection<CurrentModel>("ModelX", config => config
-            .WithMigrationStart<EntryModel>()
-            .WithInlineMigration(x => new
+            .StartWithModel<EntryModel>()
+            .WithMigration(x => new
             {
                 x.Id,
                 NewProperty = "New-" + x.OldProperty
             })
-            .WithInlineMigration(x => new
+            .WithMigration(x => new
             {
                 x.Id,
                 NewestProperty = "New-" + x.NewProperty
@@ -105,7 +105,14 @@ For larger (enterprise) applications, you may want to use a more structured appr
 
 ## Contributing
 
-Contributions are welcome! Feel free to submit pull requests, report issues, or suggest new features.
+Contributions are welcome! 
+Feel free to submit 
+- pull requests
+- report issues
+- feature requests
+
+If you are motivated to create something like dotnet-ef cli tool, feel free to do so and submit a pull request :)
+
 
 ## License
 
